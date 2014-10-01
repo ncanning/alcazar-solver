@@ -1,64 +1,68 @@
-%dimensions of the board
-%row(1..3).
-%col(1..3).
+%paths can exist between any adjacent blocks
+path(X,Y,X+1,Y) :- block(X,Y), block(X+1,Y),
+                   not npath(X+1,Y,X,Y), not path(X+1,Y,X,Y).
+path(X,Y,X-1,Y) :- block(X,Y), block(X-1,Y),
+                   not npath(X-1,Y,X,Y), not path(X-1,Y,X,Y).
+path(X,Y,X,Y+1) :- block(X,Y), block(X,Y+1),
+                   not npath(X,Y+1,X,Y), not path(X,Y+1,X,Y).
+path(X,Y,X,Y-1) :- block(X,Y), block(X,Y-1),
+                   not npath(X,Y-1,X,Y), not path(X,Y-1,X,Y).
 
-%create all blocks
-%3 { block(X,Y) : col(X) } 3 :- row(Y).
-%3 { block(X,Y) : row(Y) } 3 :- col(X).
+%paths can exist to and from exits
+path(X,Y,X+1,Y) :- exit(X,Y), block(X+1,Y),
+                   not path(X+1,Y,X,Y), not npath(X,Y,X+1,Y).
+path(X,Y,X-1,Y) :- exit(X,Y), block(X-1,Y),
+                   not path(X-1,Y,X,Y), not npath(X,Y,X-1,Y).
+path(X,Y,X,Y+1) :- exit(X,Y), block(X,Y+1), 
+                   not path(X,Y+1,X,Y), not npath(X,Y,X,Y+1).
+path(X,Y,X,Y-1) :- exit(X,Y), block(X,Y-1),
+                   not path(X,Y-1,X,Y), not npath(X,Y,X,Y-1).
 
-%create exits
-%exit(3,0).
-%exit(1,4).
+path(X,Y,X+1,Y) :- block(X,Y), exit(X+1,Y),
+                   not path(X+1,Y,X,Y), not npath(X,Y,X+1,Y).
+path(X,Y,X-1,Y) :- block(X,Y), exit(X-1,Y),
+                   not path(X-1,Y,X,Y), not npath(X,Y,X-1,Y).
+path(X,Y,X,Y+1) :- block(X,Y), exit(X,Y+1),
+                   not path(X,Y+1,X,Y), not npath(X,Y,X,Y+1).
+path(X,Y,X,Y-1) :- block(X,Y), exit(X,Y-1),
+                   not path(X,Y-1,X,Y), not npath(X,Y,X,Y-1).
 
-%create walls
-%wall(2,1,2,2).
-
-%paths can exist between any orthogonally adjacent squares
-path(X,Y,X+1,Y) :- block(X,Y), block(X+1,Y), not npath(X,Y,X+1,Y).
-npath(X,Y,X+1,Y) :- block(X,Y), block(X+1,Y), not path(X,Y,X+1,Y).
-
-path(X,Y,X-1,Y) :- block(X,Y), block(X-1,Y), not npath(X,Y,X-1,Y).
-npath(X,Y,X-1,Y) :- block(X,Y), block(X-1,Y), not path(X,Y,X-1,Y).
-
-path(X,Y,X,Y+1) :- block(X,Y), block(X,Y+1), not npath(X,Y,X,Y+1).
-npath(X,Y,X,Y+1) :- block(X,Y), block(X,Y+1), not path(X,Y,X,Y+1).
-
-path(X,Y,X,Y-1) :- block(X,Y), block(X,Y-1), not npath(X,Y,X,Y-1).
-npath(X,Y,X,Y-1) :- block(X,Y), block(X,Y-1), not path(X,Y,X,Y-1).
-
-%paths can exist between an exit and a block as well
-path(X,Y,X+1,Y) :- block(X,Y), exit(X+1,Y), not npath(X,Y,X+1,Y).
-npath(X,Y,X+1,Y) :- block(X,Y), exit(X+1,Y), not path(X,Y,X+1,Y).
-
-path(X,Y,X-1,Y) :- block(X,Y), exit(X-1,Y), not npath(X,Y,X-1,Y).
-npath(X,Y,X-1,Y) :- block(X,Y), exit(X-1,Y), not path(X,Y,X-1,Y).
-
-path(X,Y,X,Y+1) :- block(X,Y), exit(X,Y+1), not npath(X,Y,X,Y+1).
-npath(X,Y,X,Y+1) :- block(X,Y), exit(X,Y+1), not path(X,Y,X,Y+1).
-
-path(X,Y,X,Y-1) :- block(X,Y), exit(X,Y-1), not npath(X,Y,X,Y-1).
-npath(X,Y,X,Y-1) :- block(X,Y), exit(X,Y-1), not path(X,Y,X,Y-1).
-
-%a path is bidirectional, as is no path
-path(X1,Y1,X2,Y2) :- path(X2,Y2,X1,Y1).
+%if there is no path in one direction, there is no path in the opposite
+%direction as well
 npath(X1,Y1,X2,Y2) :- npath(X2,Y2,X1,Y1).
 
-%paths cannot exist through a wall
+%no path exists if there is not a path in either direction
+npath(X1,Y1,X2,Y2) :- block(X1,Y1), block(X2,Y2),
+                      not path(X1,Y1,X2,Y2), not path(X2,Y2,X1,Y1).
+npath(X1,Y1,X2,Y2) :- block(X1,Y1), exit(X2,Y2),
+                      not path(X1,Y1,X2,Y2), not path(X2,Y2,X1,Y1).
+npath(X1,Y1,X2,Y2) :- exit(X1,Y1), block(X2,Y2),
+                      not path(X1,Y1,X2,Y2), not path(X2,Y2,X1,Y1).
+
+%there is no path from block A to block B if there is a wall between them
 npath(X1,Y1,X2,Y2) :- wall(X1,Y1,X2,Y2).
 
-%exactly two paths can exist from each block
-twopaths(X,Y) :- col(X), row(Y),
-                2 { path(X,Y,X2,Y2) } 2.
+%exactly one path can exist into and out of any given block
+pathin(X,Y) :- 1 { path(X2,Y2,X,Y) } 1, block(X,Y).
+pathout(X,Y) :- 1 { path(X,Y,X2,Y2) } 1, block(X,Y).
 
-%exactly two exits used
-twoexits :- 2 { path(X,Y,X2,Y2) : exit(X,Y) } 2.
+twopaths(X,Y) :- row(Y), col(X), 1 { pathin(X,Y) } 1, 1 { pathout(X,Y) } 1.
 
-%remove options where there aren't exactly two paths from each block.
-:- not twopaths(X,Y), row(Y), col(X).
+:- not twopaths(X,Y), block(X,Y).
 
-%remove options where there aren't exactly two exits.
+%exactly one exit should be used in either direction
+exitin(X,Y) :- path(X,Y,X2,Y2), exit(X,Y), not path(X2,Y2,X,Y).
+exitout(X,Y) :- path(X2,Y2,X,Y), exit(X,Y), not path(X,Y,X2,Y2).
+
+twoexits :- 1 { exitin(X,Y) } 1, 1 { exitout(X,Y) } 1.
+
 :- not twoexits.
 
+%the solution cannot contain a path from a block to itself (i.e. a loop)
+route(X1,Y1,X2,Y2) :- path(X1,Y1,X2,Y2).
+route(X1,Y1,X3,Y3) :- route(X1,Y1,X2,Y2), path(X2,Y2,X3,Y3).
+
+:- route(X,Y,X,Y).
 
 #hide col(X).
 #hide row(Y).
@@ -68,3 +72,8 @@ twoexits :- 2 { path(X,Y,X2,Y2) : exit(X,Y) } 2.
 #hide twoexits.
 #hide exit(X,Y).
 #hide wall(X1,Y1,X2,Y2).
+#hide exitin(X,Y).
+#hide exitout(X,Y).
+#hide pathin(X,Y).
+#hide pathout(X,Y).
+#hide route(X1,Y1,X2,Y2).
